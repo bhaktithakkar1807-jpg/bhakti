@@ -1,0 +1,62 @@
+from urllib.parse import urlparse
+import re
+
+def check_url_safety(url):
+    score = 0
+    warnings = []
+
+    # HTTPS check
+    if url.startswith("https://"):
+        score += 1
+    else:
+        warnings.append("Not using HTTPS")
+
+    # Parse URL
+    parsed = urlparse(url)
+    domain = parsed.netloc
+
+    # IP address check
+    ip_pattern = r"^\d{1,3}(\.\d{1,3}){3}$"
+    if re.match(ip_pattern, domain):
+        warnings.append("Uses IP address instead of domain")
+    else:
+        score += 1
+
+    # URL shortener check
+    shorteners = [
+        "bit.ly", "tinyurl.com", "goo.gl",
+        "t.co", "ow.ly", "is.gd"
+    ]
+
+    if any(short in domain for short in shorteners):
+        warnings.append("Uses URL shortener")
+    else:
+        score += 1
+
+    # Length check
+    if len(url) < 75:
+        score += 1
+    else:
+        warnings.append("URL is very long")
+
+    # Result
+    if score >= 4:
+        status = "SAFE 🟢"
+    elif score >= 2:
+        status = "SUSPICIOUS 🟡"
+    else:
+        status = "DANGEROUS 🔴"
+
+    return status, warnings
+
+# User input
+url = input("Enter URL: ")
+
+status, warnings = check_url_safety(url)
+
+print("\nResult:", status)
+
+if warnings:
+    print("Warnings:")
+    for w in warnings:
+        print("-", w)
